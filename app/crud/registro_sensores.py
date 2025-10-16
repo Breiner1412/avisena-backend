@@ -30,7 +30,7 @@ def get_all_registros(db: Session):
             SELECT 
                 rs.id_registro,
                 rs.id_sensor,
-                s.nombre_sensor,
+                s.nombre AS nombre_sensor,
                 rs.dato_sensor,
                 rs.fecha_hora,
                 rs.u_medida
@@ -43,3 +43,4 @@ def get_all_registros(db: Session):
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener registros de sensores: {e}")
         raise Exception("Error al listar registros de sensores")
+
