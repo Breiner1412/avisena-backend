@@ -1,110 +1,78 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-
-from app.crud import lands as crud_lands
 from app.crud.permisos import verify_permissions
 from app.router.dependencies import get_current_user
 from core.database import get_db
-from app.schemas.lands import LandCreate, LandUpdate, LandOut
-from app.schemas.users import UserOut
+from app.schemas.lands import LandCreate, LandOut, LandUpdate
+from app.crud import lands as crud_lands
 
 router = APIRouter()
-modulo = 3  
 
-# Crear finca
 @router.post("/crear", status_code=status.HTTP_201_CREATED)
-def create_finca(
-    finca: LandCreate,
+def create_land(
+    land: LandCreate,
     db: Session = Depends(get_db),
-    user_token: UserOut = Depends(get_current_user)
+    user_token: LandOut = Depends(get_current_user)
 ):
     try:
-        id_rol = user_token.id_rol
-        if not verify_permissions(db, id_rol, modulo, "insertar"):
-            raise HTTPException(status_code=401, detail="Usuario no autorizado")
+        id_rol = user_token.id_rol        
+        if not verify_permissions(db, id_rol, 3, 'insertar'):
+            raise HTTPException(status_code=401, detail="usuario no autorizado para crear finca")
 
-        crud_lands.create_land(db, finca)
+        crud_lands.create_land(db, land)
         return {"message": "Finca creada correctamente"}
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Listar todas las fincas
-@router.get("/all", response_model=list[LandOut])
-def get_all_fincas(
+@router.get("/by-name", response_model=LandOut)
+def get_land(
+    name: str,
     db: Session = Depends(get_db),
-    user_token: UserOut = Depends(get_current_user)
+    user_token: LandOut = Depends(get_current_user)
 ):
     try:
-        id_rol = user_token.id_rol
-        if not verify_permissions(db, id_rol, modulo, "seleccionar"):
-            raise HTTPException(status_code=401, detail="Usuario no autorizado")
+        id_rol = user_token.id_rol        
+        if not verify_permissions(db, id_rol, 3, 'seleccionar'):
+            raise HTTPException(status_code=401, detail="usuario no autorizado para ver finca")
 
-        fincas = crud_lands.get_all_lands(db)
-        return fincas
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Obtener finca por ID
-@router.get("/get/{id_finca}", response_model=LandOut)
-def get_land_by_id(
-    id_finca: int,
-    db: Session = Depends(get_db),
-    user_token: UserOut = Depends(get_current_user)
-):
-    try:
-        id_rol = user_token.id_rol  
-        if not verify_permissions(db, id_rol, modulo, "seleccionar"):
-            raise HTTPException(status_code=401, detail="Usuario no autorizado")
-
-        land = crud_lands.get_land_by_id(db, id_finca)
+        land = crud_lands.get_land_by_name(db, name)
         if not land:
             raise HTTPException(status_code=404, detail="Finca no encontrada")
-
         return land
-
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# @router.get("/all", response_model=LandOut)
+# def get_lands(
+#     db: Session = Depends(get_db),
+#     user_token: LandOut = Depends(get_current_user)
+# ):
+#     try:
+#         id_rol = user_token.id_rol        
+#         if not verify_permissions(db, id_rol, 3, 'seleccionar'):
+#             raise HTTPException(status_code=401, detail="usuario no autorizado para consultar fincas")
 
+#         land = crud_lands.get_all_lands(db)
+#         if not land:
+#             raise HTTPException(status_code=404, detail="No hay fincas")
+#         return land
+#     except SQLAlchemyError as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
-# Actualizar finca
-@router.put("/update/{id_finca}")
-def update_finca(
-    id_finca: int,
-    finca: LandUpdate,
+@router.put("/by-id/{user_id}")
+def update_land(
+    user_id: int,
+    land: LandUpdate,
     db: Session = Depends(get_db),
-    user_token: UserOut = Depends(get_current_user)
+    user_token: LandOut = Depends(get_current_user)
 ):
     try:
-        id_rol = user_token.id_rol
-        if not verify_permissions(db, id_rol, modulo, "actualizar"):
-            raise HTTPException(status_code=401, detail="Usuario no autorizado")
-
-        actualizado = crud_lands.update_land_by_id(db, id_finca, finca)
-        if not actualizado:
-            raise HTTPException(status_code=404, detail="Finca no encontrada")
-
+        success = crud_lands.update_land_by_id(db, user_id, land)
+        if not success:
+            raise HTTPException(status_code=400, detail="No se pudo actualizar la finca")
         return {"message": "Finca actualizada correctamente"}
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Cambiar estado (borrado lógico)
-@router.put("/cambiar-estado/{id_finca}")
-def cambiar_estado_finca(
-    id_finca: int,
-    db: Session = Depends(get_db),
-    user_token: UserOut = Depends(get_current_user)
-):
-    try:
-        id_rol = user_token.id_rol
-        if not verify_permissions(db, id_rol, modulo, "actualizar"):
-            raise HTTPException(status_code=401, detail="Usuario no autorizado")
-
-        actualizado = crud_lands.toggle_estado_finca(db, id_finca)
-        if not actualizado:
-            raise HTTPException(status_code=404, detail="Finca no encontrada")
-
-        return {"message": "Estado de la finca cambiado correctamente"}
-
-    except SQLAlchemyError as e:
-        raise HTTPException(status_code=500, detail=str(e))

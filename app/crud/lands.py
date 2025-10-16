@@ -1,95 +1,91 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
-import logging
 from typing import Optional
+from core.security import get_hashed_password
+import logging
+
 from app.schemas.lands import LandCreate, LandUpdate
 
 logger = logging.getLogger(__name__)
 
-def create_land(db: Session, finca: LandCreate) -> Optional[bool]:
+def create_land(db: Session, land: LandCreate) -> Optional[bool]:
     try:
-        query = text("""
-            INSERT INTO fincas (nombre, longitud, latitud, estado)
-            VALUES (:nombre, :longitud, :latitud, :estado)
+        sentencia = text("""
+            INSERT INTO fincas(
+                nombre, longitud, latitud,
+                id_usuario, estado
+            ) VALUES (
+                :nombre, :longitud, :latitud,
+                :id_usuario, :estado
+            )
         """)
-        db.execute(query, finca.model_dump())
+        db.execute(sentencia, land.model_dump())
         db.commit()
         return True
-    except SQLAlchemyError as e:
+    except Exception as e:
         db.rollback()
         logger.error(f"Error al crear finca: {e}")
-        raise Exception("Error de base de datos al crear finca")
+        raise Exception("Error de base de datos al crear la finca")
 
-def get_all_lands(db: Session):
+def get_land_by_name(db: Session, name: str):
     try:
-        query = text("""
-            SELECT id_finca, nombre, longitud, latitud, estado
-            FROM fincas
-            ORDER BY id_finca DESC
-        """)
-        result = db.execute(query).mappings().all()
+        query = text("""SELECT id_finca, nombre, longitud, latitud, id_usuario, estado
+                     FROM fincas
+                     WHERE fincas.nombre = :nombre_finca
+                """)
+        result = db.execute(query, {"nombre_finca": name}).mappings().first()
         return result
-    except SQLAlchemyError as e:
-        logger.error(f"Error al obtener fincas: {e}")
-        raise Exception("Error de base de datos al listar fincas")
+    except Exception as e:
+        logger.error(f"Error al obtener finca por nombre: {e}")
+        raise Exception("Error de base de datos al obtener la finca")
     
-def get_land_by_id(db: Session, id_finca: int):
-    query = text("""
-        SELECT id_finca, nombre, longitud, latitud, estado
-        FROM fincas
-        WHERE id_finca = :id_finca
-    """)
-    result = db.execute(query, {"id_finca": id_finca}).fetchone()
-    return result
+# def get_all_lands(db: Session):
+#     try:
+#         query = text("""SELECT id_finca, fincas.nombre, longitud, latitud, fincas.id_usuario, fincas.estado, usuarios.nombre
+#                      FROM fincas INNER JOIN usuarios ON usuarios.id_usuario=fincas.id_usuario
+#                 """)
+#         result = db.execute(query).mappings().all()
+#         return result
+#     except Exception as e:
+#         logger.error(f"Error al obtener fincas: {e}")
+#         raise Exception("Error de base de datos al obtener las fincas")
 
-def get_land_by_id(db: Session, id_finca: int):
+    
+def update_land_by_id(db: Session, land_id: int, land: LandUpdate) -> Optional[bool]:
     try:
-        query = text("""
-            SELECT id_finca, nombre, longitud, latitud, estado
-            FROM fincas
-            WHERE id_finca = :id_finca
-        """)
-        result = db.execute(query, {"id_finca": id_finca}).mappings().first()
-        return result
-    except SQLAlchemyError as e:
-        logger.error(f"Error al obtener finca {id_finca}: {e}")
-        raise Exception("Error de base de datos al consultar finca")
+        # Solo los campos enviados por el cliente
+        land_data = land.model_dump(exclude_unset=True)
+        if not land_data:
+            return False  # nada que actualizar
 
-
-def update_land_by_id(db: Session, id_finca: int, finca: LandUpdate) -> Optional[bool]:
-    try:
-        fields = finca.model_dump(exclude_unset=True)
-        if not fields:
-            return False
-
-        set_clause = ", ".join([f"{key} = :{key}" for key in fields.keys()])
-        query = text(f"""
-            UPDATE fincas
-            SET {set_clause}
+        # Construir dinámicamente la sentencia UPDATE
+        set_clauses = ", ".join([f"{key} = :{key}" for key in land_data.keys()])
+        sentencia = text(f"""
+            UPDATE fincas 
+            SET {set_clauses}
             WHERE id_finca = :id_finca
         """)
 
-        fields["id_finca"] = id_finca
-        result = db.execute(query, fields)
+        # Agregar el id_finca
+        land_data["id_finca"] = land_id
+
+        result = db.execute(sentencia, land_data)
         db.commit()
-        return result.rowcount > 0
-    except SQLAlchemyError as e:
-        db.rollback()
-        logger.error(f"Error al actualizar finca {id_finca}: {e}")
-        raise Exception("Error de base de datos al actualizar finca")
 
-def toggle_estado_finca(db: Session, id_finca: int) -> bool:
-    try:
-        query = text("""
-            UPDATE fincas
-            SET estado = NOT estado
-            WHERE id_finca = :id_finca
-        """)
-        result = db.execute(query, {"id_finca": id_finca})
-        db.commit()
         return result.rowcount > 0
-    except SQLAlchemyError as e:
+    except Exception as e:
         db.rollback()
-        logger.error(f"Error al cambiar estado de finca {id_finca}: {e}")
-        raise Exception("Error de base de datos al cambiar estado de la finca")
+        logger.error(f"Error al actualizar finca {land_id}: {e}")
+        raise Exception("Error de base de datos al actualizar la finca")
+
+# def get_land_by_id(db:Session, id:int):
+#     try:
+#         query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, estado, nombre_rol
+#                      FROM usuarios INNER JOIN roles ON usuarios.id_rol=roles.id_rol
+#                      WHERE id_usuario = :id_land
+#                 """)
+#         result = db.execute(query, {"id_land": id}).mappings().first()
+#         return result
+#     except Exception as e:
+#         logger.error(f"Error al obtener usuario por email: {e}")
+#         raise Exception("Error de base de datos al obtener el usuario")
