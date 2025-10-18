@@ -13,12 +13,11 @@ class ShedCreate(ShedBase):
 
 class ShedUpdate(BaseModel):
     nombre: Optional[str] = Field(default=None, min_length=3, max_length=80)
-    capacidad: Optional[float]
-    cant_actual: Optional[float]
+    capacidad: Optional[float] = Field(default=None)
+    cant_actual: Optional[float] = Field(default=None)
 
 class ShedEstado(BaseModel):
     estado: Optional[bool] = None
 
 class ShedOut(ShedBase):
     id_galpon: int
-    id_finca: int

@@ -42,22 +42,18 @@ def get_shed_by_id(db: Session, id: int):
         logger.error(f"Error al obtener galpón por el id: {e}")
         raise Exception("Error de base de datos al obtener el galpón")
     
-def update_shed(db: Session, shed_id: int, shed_update: ShedUpdate) -> bool:
+def get_all_sheds(db: Session):
     try:
-        fields = shed_update.model_dump(exclude_unset=True)
-        if not fields:
-            return False
-        set_clause = ", ".join([f"{key} = :{key}" for key in fields])
-        fields["shed_id"] = shed_id
-
-        query = text(f"UPDATE galpones SET {set_clause} WHERE id_galpon = :galpon_id")
-        db.execute(query, fields)
-        db.commit()
-        return True
+        query = text("""
+            SELECT id_galpon, id_finca, nombre,
+            capacidad, cant_actual, estado
+            FROM galpones
+        """)
+        result = db.execute(query).mappings().all()
+        return result
     except SQLAlchemyError as e:
-        db.rollback()
-        logger.error(f"Error al actualizar galpón: {e}")
-        raise Exception("Error de base de datos al actualizar el galpón")
+        logger.error(f"Error al obtener tipos de sensores: {e}")
+        raise Exception("Error de base de datos al obtener los galpones")
 
 def update_shed_by_id(db: Session, shed_id: int, shed: ShedUpdate) -> Optional[bool]:
     try:
