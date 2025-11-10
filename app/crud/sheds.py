@@ -52,7 +52,7 @@ def get_all_sheds(db: Session):
         result = db.execute(query).mappings().all()
         return result
     except SQLAlchemyError as e:
-        logger.error(f"Error al obtener tipos de sensores: {e}")
+        logger.error(f"Error al obtener los galpones: {e}")
         raise Exception("Error de base de datos al obtener los galpones")
 
 def update_shed_by_id(db: Session, shed_id: int, shed: ShedUpdate) -> Optional[bool]:
