@@ -34,7 +34,7 @@ def create_user(db: Session, user: UserCreate) -> Optional[bool]:
 
 def get_user_by_email_for_login(db: Session, email: str):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, estado, nombre_rol, pass_hash
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol, pass_hash
                      FROM usuarios INNER JOIN roles ON usuarios.id_rol=roles.id_rol
                      WHERE email = :correo
                 """)
@@ -46,7 +46,7 @@ def get_user_by_email_for_login(db: Session, email: str):
 
 def get_user_by_email(db: Session, email: str):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, estado, nombre_rol
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
                      FROM usuarios INNER JOIN roles ON usuarios.id_rol=roles.id_rol
                      WHERE email = :correo
                 """)
@@ -58,7 +58,7 @@ def get_user_by_email(db: Session, email: str):
 
 def get_all_user_except_admins(db: Session):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, estado, nombre_rol
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
                      FROM usuarios INNER JOIN roles ON usuarios.id_rol=roles.id_rol
                      WHERE usuarios.id_rol NOT IN (1,2)
                 """)
@@ -67,23 +67,6 @@ def get_all_user_except_admins(db: Session):
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener usuarios: {e}")
         raise Exception("Error de base de datos al obtener los usuarios")
-
-# def update_user_by_id(db: Session, user_id: int, user_update: UserUpdate) -> bool:
-#     try:
-#         fields = user_update.model_dump(exclude_unset=True)
-#         if not fields:
-#             return False
-#         set_clause = ", ".join([f"{key} = :{key}" for key in fields])
-#         fields["user_id"] = user_id
-
-#         query = text(f"UPDATE usuarios SET {set_clause} WHERE id_usuario = :user_id")
-#         db.execute(query, fields)
-#         db.commit()
-#         return True
-#     except Exception as e:
-#         db.rollback()
-#         logger.error(f"Error al actualizar usuario: {e}")
-#         raise Exception("Error de base de datos al actualizar el usuario")
 
 def update_user_by_id(db: Session, user_id: int, user: UserUpdate) -> Optional[bool]:
     try:
@@ -114,7 +97,7 @@ def update_user_by_id(db: Session, user_id: int, user: UserUpdate) -> Optional[b
 
 def get_user_by_id(db:Session, id:int):
     try:
-        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, estado, nombre_rol
+        query = text("""SELECT id_usuario, nombre, documento, usuarios.id_rol, email, telefono, usuarios.estado, nombre_rol
                      FROM usuarios INNER JOIN roles ON usuarios.id_rol=roles.id_rol
                      WHERE id_usuario = :id_user
                 """)
