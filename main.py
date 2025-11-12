@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.router import users, sheds, lands, incidentes_genrales, registro_sensores, categories, inventory, sensor_types, sensors
+from app.router import users, sheds, lands, incidentes_generales, registro_sensores, categories, inventory, sensor_types, sensors
 from app.router import auth
 app = FastAPI()
 
@@ -8,7 +8,7 @@ app = FastAPI()
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(auth.router, prefix="/access", tags=["login"])
 app.include_router(lands.router, prefix="/lands", tags=["lands"])
-app.include_router(incidentes_genrales.router, prefix="/incidentes_genrales", tags=["incidentes_genrales"])
+app.include_router(incidentes_generales.router, prefix="/incidentes_generales", tags=["incidentes_generales"])
 app.include_router(registro_sensores.router, prefix="/registro-sensores", tags=["Registro Sensores"])
 app.include_router(categories.router, prefix="/categories", tags=["categories"])
 app.include_router(inventory.router, prefix="/inventory", tags=["inventory"])
@@ -33,4 +33,5 @@ def read_root():
                 "message": "ok",
                 "autor": "ADSO 2925889"
             }
+
 
