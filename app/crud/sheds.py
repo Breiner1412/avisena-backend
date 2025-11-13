@@ -60,12 +60,10 @@ def get_all_sheds(db: Session):
         
 def update_shed_by_id(db: Session, shed_id: int, shed: ShedUpdate) -> Optional[bool]:
     try:
-        # Solo los campos enviados por el cliente
         shed_data = shed.model_dump(exclude_unset=True)
         if not shed_data:
-            return False  # nada que actualizar
+            raise Exception("No se enviaron campos para actualizar")
 
-        # Construir dinámicamente la sentencia UPDATE
         set_clauses = ", ".join([f"{key} = :{key}" for key in shed_data.keys()])
         sentencia = text(f"""
             UPDATE galpones 
