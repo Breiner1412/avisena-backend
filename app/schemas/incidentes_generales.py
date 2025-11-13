@@ -19,3 +19,4 @@ class IncidenteGeneralUpdate(BaseModel):
 
 class IncidenteGeneralOut(IncidenteGeneralBase):
     id_incidente: int
+    nombre_finca: Optional[str] = None
