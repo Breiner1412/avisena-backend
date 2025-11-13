@@ -32,9 +32,11 @@ def create_shed(db: Session, shed: ShedCreate) -> Optional[bool]:
 def get_shed_by_id(db: Session, id: int):
     try:
         query = text("""
-                     SELECT id_galpon, id_finca, nombre, capacidad, cant_actual, estado
-                     FROM galpones
-                     WHERE galpones.id_galpon = :id_galpon
+                     SELECT g.id_galpon, g.id_finca, g.nombre,
+                     g.capacidad, g.cant_actual, g.estado, f.nombre as nombre_finca
+                     FROM galpones g 
+                     JOIN fincas f ON g.id_finca = f.id_finca
+                     WHERE g.id_galpon = :id_galpon
                      """)
         result = db.execute(query, {"id_galpon": id}).mappings().first()
         return result
@@ -45,16 +47,17 @@ def get_shed_by_id(db: Session, id: int):
 def get_all_sheds(db: Session):
     try:
         query = text("""
-            SELECT id_galpon, id_finca, nombre,
-            capacidad, cant_actual, estado
-            FROM galpones
+            SELECT g.id_galpon, g.id_finca, g.nombre,
+            g.capacidad, g.cant_actual, g.estado, f.nombre as nombre_finca
+            FROM galpones g 
+            JOIN fincas f ON g.id_finca = f.id_finca
         """)
         result = db.execute(query).mappings().all()
         return result
     except SQLAlchemyError as e:
-        logger.error(f"Error al obtener los galpones: {e}")
+        logger.error(f"Error al obtener tipos de galpones: {e}")
         raise Exception("Error de base de datos al obtener los galpones")
-
+        
 def update_shed_by_id(db: Session, shed_id: int, shed: ShedUpdate) -> Optional[bool]:
     try:
         # Solo los campos enviados por el cliente
