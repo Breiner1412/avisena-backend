@@ -30,9 +30,16 @@ def create_incidente(db: Session, incidente: IncidenteGeneralCreate) -> Optional
 def get_incidente_by_id(db: Session, id_incidente: int):
     try:
         query = text("""
-            SELECT id_incidente, descripcion, fecha_hora, id_finca, esta_resuelta
-            FROM incidentes_generales
-            WHERE id_incidente = :id_incidente
+            SELECT 
+                ig.id_incidente, 
+                ig.descripcion, 
+                ig.fecha_hora, 
+                ig.id_finca, 
+                ig.esta_resuelta,
+                f.nombre AS nombre_finca  -- Agregar el nombre de la finca
+            FROM incidentes_generales ig
+            LEFT JOIN fincas f ON ig.id_finca = f.id_finca
+            WHERE ig.id_incidente = :id_incidente
         """)
         result = db.execute(query, {"id_incidente": id_incidente}).mappings().first()
         return result
@@ -44,9 +51,16 @@ def get_incidente_by_id(db: Session, id_incidente: int):
 def get_all_incidentes(db: Session):
     try:
         query = text("""
-            SELECT id_incidente, descripcion, fecha_hora, id_finca, esta_resuelta
-            FROM incidentes_generales
-            ORDER BY fecha_hora DESC
+            SELECT 
+                ig.id_incidente, 
+                ig.descripcion, 
+                ig.fecha_hora, 
+                ig.id_finca, 
+                ig.esta_resuelta,
+                f.nombre AS nombre_finca  -- Agregar el nombre de la finca
+            FROM incidentes_generales ig
+            LEFT JOIN fincas f ON ig.id_finca = f.id_finca
+            ORDER BY ig.fecha_hora DESC
         """)
         result = db.execute(query).mappings().all()
         return result
