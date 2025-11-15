@@ -92,7 +92,6 @@ def get_inventory_by_land(db: Session, land_id: int) -> List[dict]:
             INNER JOIN categoria_inventario c ON i.id_categoria = c.id_categoria
             INNER JOIN fincas f ON i.id_finca = f.id_finca
             WHERE i.id_finca = :land_id
-            AND f.estado = 1
             ORDER BY i.id_inventario
         """)
         result = db.execute(query, {"land_id": land_id}).mappings().all()
