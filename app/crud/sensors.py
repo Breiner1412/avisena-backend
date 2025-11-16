@@ -61,7 +61,6 @@ def get_all_sensores(db: Session):
         raise Exception("Error de base de datos al obtener los sensores")
 
 def get_active_tipos_sensores(db: Session):
-    """Obtiene solo los tipos de sensores activos"""
     try:
         query = text("""
             SELECT id_tipo, nombre, modelo
@@ -77,7 +76,6 @@ def get_active_tipos_sensores(db: Session):
 
 
 def get_active_galpones(db: Session):
-    """Obtiene solo los galpones activos"""
     try:
         query = text("""
             SELECT id_galpon, nombre
@@ -109,6 +107,23 @@ def get_sensores_by_galpon(db: Session, id_galpon: int):
         logger.error(f"Error al obtener sensores por galpón: {e}")
         raise Exception("Error de base de datos al obtener los sensores")
 
+def get_sensores_by_tipo(db: Session, id_tipo_sensor: int):
+    try:
+        query = text("""
+            SELECT 
+                s.id_sensor, s.nombre, s.id_tipo_sensor, s.id_galpon, s.descripcion, s.estado,
+                t.nombre AS nombre_tipo, t.modelo AS modelo_tipo, g.nombre AS nombre_galpon
+            FROM sensores s
+            INNER JOIN tipo_sensores t ON s.id_tipo_sensor = t.id_tipo
+            INNER JOIN galpones g ON s.id_galpon = g.id_galpon
+            WHERE s.id_tipo_sensor = :id_tipo_sensor
+            ORDER BY s.nombre
+        """)
+        result = db.execute(query, {"id_tipo_sensor": id_tipo_sensor}).mappings().all()
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener sensores por tipo: {e}")
+        raise Exception("Error de base de datos al obtener los sensores por tipo")
 
 def update_sensor_by_id(db: Session, id_sensor: int, sensor: SensorUpdate) -> Optional[bool]:
     try:
