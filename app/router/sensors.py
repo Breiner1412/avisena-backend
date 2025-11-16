@@ -60,6 +60,34 @@ def get_all_sensores(
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/tipo-sensor/activos")
+def get_tipos_sensores_activos(
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        id_rol = user_token.id_rol
+        if not verify_permissions(db, id_rol, modulo, "seleccionar"):
+            raise HTTPException(status_code=401, detail="Usuario no autorizado")
+        tipos_activos = crud_sensors.get_active_tipos_sensores(db)
+        return tipos_activos
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/galpon/activos")
+def get_galpones_activos(
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        id_rol = user_token.id_rol
+        if not verify_permissions(db, id_rol, modulo, "seleccionar"):
+            raise HTTPException(status_code=401, detail="Usuario no autorizado")
+        galpones_activos = crud_sensors.get_active_galpones(db)
+        return galpones_activos
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/sensor/by-galpon/{id_galpon}", response_model=List[SensorOut])
 def get_sensores_by_galpon(
