@@ -48,8 +48,18 @@ def get_incidente_by_id(db: Session, id_incidente: int):
         raise Exception("Error al consultar incidente general por ID")
 
 # Obtener todos los incidentes
-def get_all_incidentes(db: Session):
+# Obtener todos los incidentes con paginación
+def get_all_incidentes(db: Session, skip: int = 0, limit: int = 100):
     try:
+        # Consulta para obtener el total de registros (útil para el frontend)
+        count_query = text("""
+            SELECT COUNT(*) as total
+            FROM incidentes_generales ig
+            LEFT JOIN fincas f ON ig.id_finca = f.id_finca
+        """)
+        total = db.execute(count_query).scalar()
+
+        # Consulta principal con paginación
         query = text("""
             SELECT 
                 ig.id_incidente, 
@@ -57,17 +67,23 @@ def get_all_incidentes(db: Session):
                 ig.fecha_hora, 
                 ig.id_finca, 
                 ig.esta_resuelta,
-                f.nombre AS nombre_finca  -- Agregar el nombre de la finca
+                f.nombre AS nombre_finca
             FROM incidentes_generales ig
             LEFT JOIN fincas f ON ig.id_finca = f.id_finca
             ORDER BY ig.fecha_hora DESC
+            LIMIT :limit OFFSET :skip
         """)
-        result = db.execute(query).mappings().all()
-        return result
+        result = db.execute(query, {"skip": skip, "limit": limit}).mappings().all()
+        
+        return {
+            "incidentes": result,
+            "total": total,
+            "skip": skip,
+            "limit": limit
+        }
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener incidentes generales: {e}")
         raise Exception("Error al listar incidentes generales")
-
 # Actualizar incidente
 def update_incidente_by_id(db: Session, id_incidente: int, incidente: IncidenteGeneralUpdate) -> Optional[bool]:
     try:
