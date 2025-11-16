@@ -57,6 +57,20 @@ def get_all_sheds(db: Session):
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener tipos de galpones: {e}")
         raise Exception("Error de base de datos al obtener los galpones")
+
+def get_active_lands(db: Session):
+    try:
+        query = text("""
+            SELECT id_finca, nombre
+            FROM fincas
+            WHERE estado = true
+        """)
+        result = db.execute(query).mappings().all()
+        return result
+
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener fincas activas: {e}")
+        raise Exception("Error de base de datos al obtener las fincas activas")
         
 def update_shed_by_id(db: Session, shed_id: int, shed: ShedUpdate) -> Optional[bool]:
     try:
