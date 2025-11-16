@@ -104,6 +104,20 @@ def get_sensores_by_galpon(
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/sensor/by-tipo/{id_tipo_sensor}", response_model=List[SensorOut])
+def get_sensores_by_tipo(
+    id_tipo_sensor: int,
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        id_rol = user_token.id_rol
+        if not verify_permissions(db, id_rol, modulo, "seleccionar"):
+            raise HTTPException(status_code=401, detail="Usuario no autorizado para consultar sensores")
+        sensores = crud_sensors.get_sensores_by_tipo(db, id_tipo_sensor)
+        return sensores
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/sensor/by-id/{id_sensor}")
 def update_sensor(
