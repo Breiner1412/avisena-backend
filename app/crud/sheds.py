@@ -71,6 +71,25 @@ def get_active_lands(db: Session):
     except SQLAlchemyError as e:
         logger.error(f"Error al obtener fincas activas: {e}")
         raise Exception("Error de base de datos al obtener las fincas activas")
+
+def get_sheds_by_lands(db: Session, id_finca: int):
+    try:
+        query = text("""
+            SELECT g.id_galpon, g.id_finca, g.nombre,
+                   g.capacidad, g.cant_actual, g.estado, f.nombre as nombre_finca
+            FROM galpones g
+            JOIN fincas f ON g.id_finca = f.id_finca
+            WHERE g.id_finca = :id_finca
+        """)
+        result = db.execute(query, {"id_finca": id_finca}).mappings().all()
+
+        if not result:
+            return {"message": "La finca no tiene galpones asignados"}
+        return result
+
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener galpones por finca: {e}")
+        raise Exception("Error de base de datos al obtener los galpones por finca")
         
 def update_shed_by_id(db: Session, shed_id: int, shed: ShedUpdate) -> Optional[bool]:
     try:
