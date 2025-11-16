@@ -74,6 +74,21 @@ def listar_fincas_activas(
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/galpones/por-finca")
+def listar_galpones_por_finca(
+    id_finca: int, 
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        id_rol = user_token.id_rol
+        if not verify_permissions(db, id_rol, modulo, "seleccionar"):
+            raise HTTPException(status_code=401, detail="Usuario no autorizado")
+        sheds = crud_sheds.get_sheds_by_lands(db, id_finca)
+        return sheds
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.put("/by-id/{shed_id}")
 def update_shed_by_id(
     shed_id: int, 
