@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -54,9 +54,11 @@ def get_incidente(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Listar todos los incidentes
-@router.get("/all", response_model=list[IncidenteGeneralOut])
+# Listar todos los incidentes CON PAGINACIÓN
+@router.get("/all")
 def get_all_incidentes(
+    skip: int = Query(0, ge=0, description="Número de registros a saltar"),
+    limit: int = Query(100, ge=1, le=1000, description="Número máximo de registros a retornar"),
     db: Session = Depends(get_db),
     user_token: UserOut = Depends(get_current_user)
 ):
@@ -65,8 +67,8 @@ def get_all_incidentes(
         if not verify_permissions(db, id_rol, modulo, "seleccionar"):
             raise HTTPException(status_code=401, detail="Usuario no autorizado")
 
-        incidentes = crud_incidentes.get_all_incidentes(db)
-        return incidentes
+        result = crud_incidentes.get_all_incidentes(db, skip=skip, limit=limit)
+        return result
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -114,5 +116,4 @@ def cambiar_estado_incidente_general(
 
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
