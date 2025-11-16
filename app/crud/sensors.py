@@ -60,6 +60,36 @@ def get_all_sensores(db: Session):
         logger.error(f"Error al obtener sensores: {e}")
         raise Exception("Error de base de datos al obtener los sensores")
 
+def get_active_tipos_sensores(db: Session):
+    """Obtiene solo los tipos de sensores activos"""
+    try:
+        query = text("""
+            SELECT id_tipo, nombre, modelo
+            FROM tipo_sensores
+            WHERE estado = true
+            ORDER BY nombre
+        """)
+        result = db.execute(query).mappings().all()
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener tipos de sensores activos: {e}")
+        raise Exception("Error de base de datos al obtener los tipos de sensores activos")
+
+
+def get_active_galpones(db: Session):
+    """Obtiene solo los galpones activos"""
+    try:
+        query = text("""
+            SELECT id_galpon, nombre
+            FROM galpones
+            WHERE estado = true
+            ORDER BY nombre
+        """)
+        result = db.execute(query).mappings().all()
+        return result
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener galpones activos: {e}")
+        raise Exception("Error de base de datos al obtener los galpones activos")
 
 def get_sensores_by_galpon(db: Session, id_galpon: int):
     try:
