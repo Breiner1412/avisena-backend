@@ -49,9 +49,10 @@ def get_incidente_by_id(db: Session, id_incidente: int):
 
 # Obtener todos los incidentes
 # Obtener todos los incidentes con paginación
+# En tu archivo CRUD - función actualizada
 def get_all_incidentes(db: Session, skip: int = 0, limit: int = 100):
     try:
-        # Consulta para obtener el total de registros (útil para el frontend)
+        # Consulta para obtener el total de registros
         count_query = text("""
             SELECT COUNT(*) as total
             FROM incidentes_generales ig
@@ -75,8 +76,11 @@ def get_all_incidentes(db: Session, skip: int = 0, limit: int = 100):
         """)
         result = db.execute(query, {"skip": skip, "limit": limit}).mappings().all()
         
+        # Convertir a lista de diccionarios para compatibilidad con Pydantic
+        incidentes_list = [dict(incidente) for incidente in result]
+        
         return {
-            "incidentes": result,
+            "incidentes": incidentes_list,
             "total": total,
             "skip": skip,
             "limit": limit
