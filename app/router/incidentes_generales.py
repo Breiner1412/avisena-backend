@@ -7,7 +7,8 @@ from app.crud.permisos import verify_permissions
 from app.router.dependencies import get_current_user
 from app.schemas.users import UserOut
 from app.schemas.incidentes_generales import (
-    IncidenteGeneralCreate, IncidenteGeneralUpdate, IncidenteGeneralOut
+    IncidenteGeneralCreate, IncidenteGeneralUpdate, 
+    IncidenteGeneralOut, IncidenteGeneralPaginado
 )
 from core.database import get_db
 
@@ -55,7 +56,7 @@ def get_incidente(
 
 
 # Listar todos los incidentes CON PAGINACIÓN
-@router.get("/all")
+@router.get("/all", response_model=IncidenteGeneralPaginado)
 def get_all_incidentes(
     skip: int = Query(0, ge=0, description="Número de registros a saltar"),
     limit: int = Query(100, ge=1, le=1000, description="Número máximo de registros a retornar"),
@@ -96,7 +97,7 @@ def update_incidente(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Eliminar incidente
+# Cambiar estado del incidente
 @router.put("/cambiar-estado/{id_incidente}")
 def cambiar_estado_incidente_general(
     id_incidente: int,
@@ -116,4 +117,3 @@ def cambiar_estado_incidente_general(
 
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
-
