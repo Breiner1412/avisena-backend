@@ -53,7 +53,20 @@ def get_incidente(
 
     except SQLAlchemyError as e:
         raise HTTPException(status_code=500, detail=str(e))
-
+        
+@router.get("/fincas/activas")
+def listar_fincas_activas(
+    db: Session = Depends(get_db),
+    user_token: UserOut = Depends(get_current_user)
+):
+    try:
+        id_rol = user_token.id_rol
+        if not verify_permissions(db, id_rol, modulo, "seleccionar"):
+            raise HTTPException(status_code=401, detail="Usuario no autorizado")
+        lands = crud_incidentes.get_active_lands(db)
+        return lands
+    except SQLAlchemyError as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Listar todos los incidentes CON PAGINACIÓN
 @router.get("/all", response_model=IncidenteGeneralPaginado)
