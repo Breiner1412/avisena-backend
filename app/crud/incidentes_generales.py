@@ -25,6 +25,20 @@ def create_incidente(db: Session, incidente: IncidenteGeneralCreate) -> Optional
         db.rollback()
         logger.error(f"Error al crear incidente general: {e}")
         raise Exception("Error de base de datos al crear incidente general")
+        
+def get_active_lands(db: Session):
+    try:
+        query = text("""
+            SELECT id_finca, nombre
+            FROM fincas
+            WHERE estado = true
+        """)
+        result = db.execute(query).mappings().all()
+        return result
+
+    except SQLAlchemyError as e:
+        logger.error(f"Error al obtener fincas activas: {e}")
+        raise Exception("Error de base de datos al obtener las fincas activas")
 
 # Obtener incidente por ID
 def get_incidente_by_id(db: Session, id_incidente: int):
