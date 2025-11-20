@@ -135,7 +135,7 @@ def delete_incidente(
 ):
     try:
         id_rol = user_token.id_rol
-        if not verify_permissions(db, id_rol, modulo, "eliminar"):
+        if not verify_permissions(db, id_rol, modulo, "borrar"):
             raise HTTPException(status_code=401, detail="Usuario no autorizado")
 
         success = crud_incidentes.delete_incidente_by_id(db, id_incidente)
